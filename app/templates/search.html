@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Поиск - AskDi{% endblock %}
+
+{% block content %}
+<div class="search-results">
+    <h2>Результаты поиска</h2>
+    {% if query %}
+        <p>Поисковый запрос: <strong>{{ query }}</strong></p>
+    {% else %}
+        <p>Введите поисковый запрос в форме выше.</p>
+    {% endif %}
+    <p class="text-muted">Функционал поиска будет реализован в будущем.</p>
+</div>
+{% endblock %}
+

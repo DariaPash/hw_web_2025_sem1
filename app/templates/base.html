@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AskDi{% endblock %}</title>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/custom.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">AskDi</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'hot' %}">Лучшие</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'ask' %}">Задать вопрос</a>
+                    </li>
+                </ul>
+
+                <form class="d-flex search-form me-3" action="/search/" method="get">
+                    <input class="form-control me-2" type="search" placeholder="Поиск..." name="q">
+                    <button class="btn btn-outline-light" type="submit">Найти</button>
+                </form>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Войти</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'signup' %}">Регистрация</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-lg-8">
+                    {% block content %}
+                    <div class="main-content">
+                        <h1>Добро пожаловать на AskDi</h1>
+                        <p>Здесь будет основной контент страницы.</p>
+                    </div>
+                    {% endblock %}
+                </div>
+
+                <div class="col-lg-4">
+                    {% block sidebar %}
+                <div class="sidebar">
+                    <h6>Популярные теги</h6>
+                    <div class="question-tags">
+                        {% for tag in popular_tags %}
+                        <a href="{% url 'tag' tag.name %}" class="tag">{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="sidebar">
+                    <h6>Лучшие участники</h6>
+                    <div class="list-group list-group-flush">
+                        {% for user in best_users %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                    <span class="text-white small">{{ user.initial }}</span>
+                                </div>
+                                <span>{{ user.username }}</span>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ user.reputation }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 AskDi. Все права защищены.</p>
+        </div>
+    </footer>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

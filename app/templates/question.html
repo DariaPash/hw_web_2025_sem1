@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ question.title }} - AskDi{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="question-detail mb-4">
+    <div class="d-flex">
+        <div class="question-stats p-2 border rounded shadow-sm text-center" style="width: 90px; margin-right: 15px;">
+            <div class="vote-counts mb-2">
+              <span class="text-success"><i class="bi bi-hand-thumbs-up"></i> {{ question.votes_up }}</span><br>
+              <span class="text-danger"><i class="bi bi-hand-thumbs-down"></i> {{ question.votes_down }}</span>
+            </div>
+          
+            <div class="vote-buttons mb-2">
+              <button class="btn btn-outline-success btn-sm mb-1" title="Повысить рейтинг">
+                <i class="bi bi-hand-thumbs-up-fill"></i>
+              </button><br>
+              <button class="btn btn-outline-danger btn-sm" title="Понизить рейтинг">
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+              </button>
+            </div>
+        </div>
+        
+        <div class="question-content flex-grow-1">
+            <h2 class="mb-3">{{ question.title }}</h2>
+            <div class="question-text mb-3">
+                {{ question.full_text }}
+            </div>
+            <div class="question-meta mb-3">
+                <img src="{% static 'images/avatar-placeholder.svg' %}" alt="Avatar" class="user-avatar-small" />
+                Спросил <a href="{% url 'profile' question.author %}">{{ question.author_name }}</a> {{ question.time_ago }}
+            </div>
+            <div class="question-tags">
+                {% for tag in question.tags %}
+                <a href="{% url 'tag' tag %}" class="tag">{{ tag }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="answers-section">
+    <h3 class="mb-3">Ответы ({{ answers|length }})</h3>
+    
+    {% for answer in answers %}
+    <div class="answer-item d-flex mb-4 p-3 border rounded">
+        <div class="answer-stats p-2 text-center" style="width: 90px; margin-right: 15px;">
+            <div class="vote-counts mb-2">
+              <span class="text-success"><i class="bi bi-hand-thumbs-up"></i> {{ answer.votes_up }}</span><br>
+              <span class="text-danger"><i class="bi bi-hand-thumbs-down"></i> {{ answer.votes_down }}</span>
+            </div>
+          
+            <div class="vote-buttons mb-2">
+              <button class="btn btn-outline-success btn-sm mb-1" title="Повысить рейтинг">
+                <i class="bi bi-hand-thumbs-up-fill"></i>
+              </button><br>
+              <button class="btn btn-outline-danger btn-sm" title="Понизить рейтинг">
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+              </button>
+            </div>
+            
+            {% if answer.is_correct %}
+            <div class="correct-answer">
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Правильный ответ</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="answer-content flex-grow-1">
+            <div class="answer-text mb-2">
+                {{ answer.text }}
+            </div>
+            <div class="answer-meta">
+                <img src="{% static 'images/avatar-placeholder.svg' %}" alt="Avatar" class="user-avatar-small" />
+                Ответил <a href="{% url 'profile' answer.author %}">{{ answer.author_name }}</a> {{ answer.time_ago }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="answer-form mt-4">
+    <h4 class="mb-3">Ваш ответ</h4>
+    <form method="post" action="">
+        {% csrf_token %}
+        <div class="mb-3">
+            <textarea class="form-control" name="answer_text" rows="6" placeholder="Введите ваш ответ здесь..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить ответ</button>
+    </form>
+</div>
+{% endblock %}

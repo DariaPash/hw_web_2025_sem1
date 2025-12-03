@@ -1,0 +1,49 @@
+{% comment %}
+Шаблон пагинатора для переиспользования
+
+Использование:
+{% include 'includes/paginator.html' with page=page_obj page_param='page' %}
+
+Параметры:
+- page: объект Page из Django Paginator
+- page_param: имя GET-параметра для страницы (по умолчанию 'page')
+- aria_label: метка для навигации (по умолчанию 'Pagination')
+{% endcomment %}
+{% if page.paginator.num_pages > 1 %}
+<nav aria-label="{{ aria_label|default:'Pagination' }}" class="mt-4">
+    <ul class="pagination">
+        {% if page.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?{{ page_param|default:'page' }}={{ page.previous_page_number }}">Предыдущая</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Предыдущая</span>
+        </li>
+        {% endif %}
+        
+        {% for num in page.paginator.page_range %}
+            {% if page.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?{{ page_param|default:'page' }}={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?{{ page_param|default:'page' }}={{ page.next_page_number }}">Следующая</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Следующая</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
