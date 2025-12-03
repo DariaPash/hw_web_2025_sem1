@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Вопросы по тегу: {{ tag_name }} - AskDi{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Вопросы по тегу: <span class="badge bg-primary">{{ tag_name }}</span></h2>
+    <a href="{% url 'ask' %}" class="btn btn-primary">Задать вопрос</a>
+</div>
+
+{% if questions %}
+    {% include 'includes/question_list.html' %}
+{% else %}
+    <div class="alert alert-info">
+        <p>Пока нет вопросов с тегом "{{ tag_name }}".</p>
+        <a href="{% url 'ask' %}" class="btn btn-primary">Задать первый вопрос</a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - AskDi</title>
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/custom.css" rel="stylesheet">
+    
+    <style>
+    .card {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+
+    .card-title {
+        color: #495057;
+        font-weight: 600;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+
+    .text-decoration-none {
+        color: #007bff;
+    }
+
+    .text-decoration-none:hover {
+        color: #0056b3;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">AskDi</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="ask.html">Задать вопрос</a>
+                    </li>
+                </ul>
+
+                <form class="d-flex search-form me-3" action="#" method="get">
+                    <input class="form-control me-2" type="search" placeholder="Поиск..." name="q">
+                    <button class="btn btn-outline-light" type="submit">Найти</button>
+                </form>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Войти</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="signup.html">Регистрация</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-4">Вход</h3>
+
+                        <div class="alert alert-danger">
+                            <h6>Ошибки входа:</h6>
+                            <ul class="mb-0">
+                                <li>Неверное имя пользователя или пароль</li>
+                            </ul>
+                        </div>
+                        
+                        <form method="post" action="#" novalidate>
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">Имя пользователя или email</label>
+                                <input type="text" 
+                                       class="form-control is-invalid" 
+                                       id="id_username" 
+                                       name="username" 
+                                       value=""
+                                       placeholder="Введите имя пользователя или email"
+                                       maxlength="150"
+                                       required
+                                       autofocus>
+                                <div class="form-error">
+                                    Неверное имя пользователя или пароль
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_password" class="form-label">Пароль</label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="id_password" 
+                                       name="password"
+                                       placeholder="Введите пароль"
+                                       required>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="id_remember_me" name="remember_me">
+                                <label class="form-check-label" for="id_remember_me">
+                                    Запомнить меня
+                                </label>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Войти</button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <a href="#" class="text-decoration-none">Забыли пароль?</a>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-center">
+                            <p class="mb-0">Нет аккаунта? <a href="signup.html" class="text-decoration-none">Зарегистрироваться</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-5">
+        <div class="container">
+            <p>&copy; 2025 AskDi. Все права защищены.</p>
+        </div>
+    </footer>
+    <script src="static/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

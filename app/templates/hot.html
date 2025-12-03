@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Лучшие вопросы - AskDi{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Лучшие вопросы</h2>
+    <a href="{% url 'ask' %}" class="btn btn-primary">Задать вопрос</a>
+</div>
+
+{% include 'includes/question_list.html' %}
+{% endblock %}
+
