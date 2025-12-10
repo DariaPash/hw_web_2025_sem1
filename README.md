@@ -1,74 +1,41 @@
 # hw_web_2025_sem1
 
-<<<<<<< HEAD
-## Установка зависимостей
-=======
+
 ## Разворачивание и запуск проекта
 
-### Установка зависимостей
+### Установка и настройка
 
-1. Создайте виртуальное окружение (рекомендуется):
+1. **Создайте и активируйте виртуальное окружение:**
 ```bash
 python -m venv venv
+# macOS/Linux:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
 ```
 
-2. Активируйте виртуальное окружение:
-   - На macOS/Linux:
-   ```bash
-   source venv/bin/activate
-   ```
-   - На Windows:
-   ```bash
-   venv\Scripts\activate
-   ```
-
-3. Установите зависимости:
->>>>>>> bcb6b0c (fix hw_2)
+2. **Установите зависимости:**
 ```bash
 pip install -r requirements.txt
 ```
 
-<<<<<<< HEAD
-## Запуск проекта
-```bash
-python3 manage.py runserver
-```
-
-Сервер будет доступен по адресу: http://127.0.0.1:8000/
-=======
-### Настройка базы данных
-
-1. Примените миграции:
+3. **Настройте базу данных:**
 ```bash
 python manage.py migrate
+python manage.py fill_db n
 ```
 
-2. (Опционально) Создайте суперпользователя для доступа к админ-панели:
-```bash
-python manage.py createsuperuser
-```
+### Запуск
 
-### Запуск проекта
-
-1. Запустите сервер разработки:
 ```bash
 python manage.py runserver
 ```
+Сервер будет доступен по адресу: **http://127.0.0.1:8000/**
 
-2. Откройте браузер и перейдите по адресу:
-```
-http://127.0.0.1:8000/
-```
+### Основные команды
 
-### Дополнительные команды
+- Создать миграции: `python manage.py makemigrations`
+- Применить миграции: `python manage.py migrate`
 
-- Сбор статических файлов (для production):
-```bash
-python manage.py collectstatic
-```
 
-- Создание новых миграций после изменения моделей:
-```bash
-python manage.py makemigrations
-```
->>>>>>> bcb6b0c (fix hw_2)
+
