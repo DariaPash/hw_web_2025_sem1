@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрация - AskDi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">Регистрация</h3>
+                
+                <form method="post" action="{% url 'signup' %}" novalidate enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <label for="avatar" class="form-label">Аватар</label>
+                            <div class="avatar-upload">
+                                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgD6APoAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A/VCiiigAooooAKKKKACiiigAooJAGSeKQOD6/kaAFyB1oDD1GPrWfq+t6doljJeahewWNrEN0k9xII1Qe5bpXzp8R/22fDegtNa+Frd9eul4+1NlLcH1GeW/DH1ralQqVpWpxuY1a1OkryZ9Mkqg5IFcJ41+NfgnwEZE1jxBZwXCdbaN/Nm+hRcsPxxXwT46/aO8e+PvMiu9alsbN85tbDMSEejEHcw9ice1eZsd/J+8epPr/hX0FDJpN/vnb0PHq5ml8CPtnxT+3boFkWj0HRbzUG6CS5IhX8uTj64ryvX/ANt3x1qe5dPttP0pDwNsZlbH1Y/0r55/SivWhlmHp7K/qedLHVpbu3oehav+0X8SdcLG48W36Kei2zCAD/vgLXJ33jfxHq277br+qXgY/MJ7yR8/m1YtFehToU6fwpL0RySqzqfE394+WWSeRnlcyuTy7HJP1plFFbkBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQA6OR4XDxyNE46OpII/KtjT/G/iPSWzZa/qln/dW3vJEC/kwrForNxjJ6oFJxPRdJ/aJ+I+i7Rb+LdQkVe1yVmz/32D/OvQfD/wC27450zaNQttO1RB6xmN/zHFfPNFctTB4epvFfcbxxNWHwyPtnwv8At2aBeukeu6Ld6cx4aa2YSqPw4P617X4L+NHgvx8ETRdftLm4bj7M7+VN9NjYJ/Cvy7oUAMrEDep4bAz+eK8ypk9KS9x2O+GZVY7q5+vwIYDBB70u4AjpX5neB/2jvHngPZFa61Lf2Sn/AI9dQJmXHoC2SPwP4V9LfDj9trw5rrQ2vim3fQbpuDcpmS3J9yOV/Ij3rwq2V16Kuo39D1aOPpVXZs+nAc5oqjpOu6/fVlFd6feQXttKu5JIJA6sPUEVcDq3Q5+leVa2h6V77DqKKXFACUUUUAFFFFABRRRQAUUUUAFFFFABRRRQA=" 
+                                     alt="Preview" 
+                                     id="avatar-preview" 
+                                     class="rounded-circle mb-2"
+                                     style="width: 100px; height: 100px; object-fit: cover;" />
+                                <input type="file" 
+                                       class="form-control form-control-sm" 
+                                       id="avatar" 
+                                       name="avatar" 
+                                       accept="image/*">
+                                <div class="form-help">
+                                    JPG, PNG до 2MB
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Имя пользователя *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="username" 
+                                       name="username" 
+                                       placeholder="Введите имя пользователя"
+                                       maxlength="150"
+                                       required
+                                       autofocus>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       name="email" 
+                                       placeholder="Введите email"
+                                       maxlength="254"
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">Имя</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="first_name" 
+                               name="first_name" 
+                               placeholder="Введите имя"
+                               maxlength="150">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Фамилия</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="last_name" 
+                               name="last_name" 
+                               placeholder="Введите фамилию"
+                               maxlength="150">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль *</label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password"
+                               placeholder="Введите пароль"
+                               required>
+                        <div class="form-text">
+                            Минимум 8 символов. Не должен быть слишком простым или похожим на другую личную информацию.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password2" class="form-label">Подтверждение пароля *</label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password2" 
+                               name="password2"
+                               placeholder="Повторите пароль"
+                               required>
+                    </div>
+ 
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" 
+                               class="form-check-input" 
+                               id="terms" 
+                               name="terms" 
+                               required>
+                        <label class="form-check-label" for="terms">
+                            Я согласен с <a href="#" target="_blank">условиями использования</a> и <a href="#" target="_blank">политикой конфиденциальности</a> *
+                        </label>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="mb-0">Уже есть аккаунт? <a href="{% url 'login' %}" class="text-decoration-none">Войти</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

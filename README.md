@@ -1,13 +1,41 @@
 # hw_web_2025_sem1
 
-## Установка зависимостей
+
+## Разворачивание и запуск проекта
+
+### Установка и настройка
+
+1. **Создайте и активируйте виртуальное окружение:**
+```bash
+python -m venv venv
+# macOS/Linux:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+```
+
+2. **Установите зависимости:**
 ```bash
 pip install -r requirements.txt
 ```
 
-## Запуск проекта
+3. **Настройте базу данных:**
 ```bash
-python3 manage.py runserver
+python manage.py migrate
+python manage.py fill_db n
 ```
 
-Сервер будет доступен по адресу: http://127.0.0.1:8000/
+### Запуск
+
+```bash
+python manage.py runserver
+```
+Сервер будет доступен по адресу: **http://127.0.0.1:8000/**
+
+### Основные команды
+
+- Создать миграции: `python manage.py makemigrations`
+- Применить миграции: `python manage.py migrate`
+
+
+
