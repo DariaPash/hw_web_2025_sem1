@@ -1,0 +1,75 @@
+{% load static %}
+<div class="sidebar">
+    <h6>Популярные теги</h6>
+    <div class="question-tags">
+        {% for tag in popular_tags %}
+            <a href="{% url 'tag' tag.name %}" class="tag">{{ tag.name }}</a>
+        {% empty %}
+            <a href="{% url 'tag' 'python' %}" class="tag">python</a>
+            <a href="{% url 'tag' 'javascript' %}" class="tag">javascript</a>
+            <a href="{% url 'tag' 'django' %}" class="tag">django</a>
+            <a href="{% url 'tag' 'html' %}" class="tag">html</a>
+            <a href="{% url 'tag' 'css' %}" class="tag">css</a>
+            <a href="{% url 'tag' 'mysql' %}" class="tag">mysql</a>
+            <a href="{% url 'tag' 'php' %}" class="tag">php</a>
+            <a href="{% url 'tag' 'java' %}" class="tag">java</a>
+            <a href="{% url 'tag' 'c++' %}" class="tag">c++</a>
+            <a href="{% url 'tag' 'react' %}" class="tag">react</a>
+        {% endfor %}
+    </div>
+</div>
+<div class="sidebar">
+    <h6>Лучшие участники</h6>
+    <div class="list-group list-group-flush">
+        {% for user_data in best_users %}
+            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                        <span class="text-white small">{{ user_data.username|first|upper }}</span>
+                    </div>
+                    <span><a href="{% url 'profile' user_data.username %}" class="text-decoration-none">{{ user_data.username }}</a></span>
+                </div>
+                <span class="badge bg-primary rounded-pill">{{ user_data.reputation }}</span>
+            </div>
+        {% empty %}
+            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                        <span class="text-white small">J</span>
+                    </div>
+                    <span>john_doe</span>
+                </div>
+                <span class="badge bg-primary rounded-pill">156</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                        <span class="text-white small">J</span>
+                    </div>
+                    <span>jane_smith</span>
+                </div>
+                <span class="badge bg-primary rounded-pill">142</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                        <span class="text-white small">A</span>
+                    </div>
+                    <span>alex_dev</span>
+                </div>
+                <span class="badge bg-primary rounded-pill">98</span>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                        <span class="text-white small">M</span>
+                    </div>
+                    <span>maria_coder</span>
+                </div>
+                <span class="badge bg-primary rounded-pill">87</span>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+
