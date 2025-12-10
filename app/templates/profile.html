@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль {{ profile_user.username }} - AskDi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border: 4px solid white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        object-fit: cover;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                <div class="profile-avatar rounded-circle d-flex align-items-center justify-content-center text-white bg-secondary" style="width: 120px; height: 120px; border: 4px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); font-size: 3rem; font-weight: bold;">
+                    {{ profile_user.username|first|upper }}
+                </div>
+            </div>
+            <div class="col-md-9">
+                <h1 class="mb-2">{{ profile_user.username }}</h1>
+                <p class="mb-2">Full Stack Developer</p>
+                <p class="mb-0">Участник с {{ profile_user.date_joined|date:"d E Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="stats-card">
+                <div class="text-center">
+                    <div class="stat-number">{{ stats.reputation }}</div>
+                    <div class="stat-label">Репутация</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="text-center">
+                    <div class="stat-number">{{ stats.questions_count }}</div>
+                    <div class="stat-label">Вопросов</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="text-center">
+                    <div class="stat-number">{{ stats.answers_count }}</div>
+                    <div class="stat-label">Ответов</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="text-center">
+                    <div class="stat-number">{{ stats.accepted_answers }}</div>
+                    <div class="stat-label">Принятых ответов</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <ul class="nav nav-pills mb-4">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#questions">Вопросы ({{ stats.questions_count }})</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#answers">Ответы ({{ stats.answers_count }})</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#activity">Активность</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#settings">Настройки</a>
+                </li>
+            </ul>
+
+            <div>
+                <section id="questions">
+                    <div class="mt-4">
+                        <h5>Последние вопросы</h5>
+
+                        {% for question in user_questions %}
+                        <div class="question-item d-flex mb-3">
+                            <div class="question-stats me-3">
+                                <div class="votes">{{ question.votes_up|add:question.votes_down }}</div>
+                                <div class="answers text-success">{{ question.answers_count }}</div>
+                                <div class="views">0</div>
+                            </div>
+                            <div class="question-content">
+                                <a href="{% url 'question' question.id %}" class="question-title">
+                                    {{ question.title }}
+                                </a>
+                                <div class="question-meta">
+                                    Спросил {{ question.time_ago }}
+                                </div>
+                                <div class="question-tags">
+                                    {% for tag in question.tags.all %}
+                                    <a href="{% url 'tag' tag.name %}" class="tag">{{ tag.name }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Пока нет вопросов</p>
+                        {% endfor %}
+
+                        {% if questions_page.has_other_pages %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if questions_page.has_previous %}
+                                <li class="page-item"><a class="page-link" href="?page={{ questions_page.previous_page_number }}">Предыдущая</a></li>
+                                {% endif %}
+                                <li class="page-item active"><span class="page-link">{{ questions_page.number }} из {{ questions_page.paginator.num_pages }}</span></li>
+                                {% if questions_page.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ questions_page.next_page_number }}">Следующая</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </section>
+                
+                <section id="answers">
+                    <div class="mt-4">
+                        <h5>Последние ответы</h5>
+                        
+                        {% for answer in user_answers %}
+                        <div class="answer-item mb-3">
+                            <div class="d-flex">
+                                <div class="question-stats me-3">
+                                    <div class="votes">{{ answer.votes_up|add:answer.votes_down }}</div>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" {% if answer.is_correct %}checked{% endif %} disabled>
+                                        <label class="form-check-label {% if answer.is_correct %}text-warning{% endif %}">
+                                            {% if answer.is_correct %}✓ {% endif %}Правильный
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="question-content flex-grow-1">
+                                    <div class="answer-text mb-2">
+                                        {{ answer.text|truncatewords:30 }}
+                                    </div>
+                                    <div class="question-meta mb-2">
+                                        Ответил на вопрос <a href="{% url 'question' answer.question_id %}">"{{ answer.question_title }}"</a>
+                                    </div>
+                                    <div class="question-meta">
+                                        {{ answer.time_ago }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Пока нет ответов</p>
+                        {% endfor %}
+
+                        {% if answers_page.has_other_pages %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if answers_page.has_previous %}
+                                <li class="page-item"><a class="page-link" href="?page={{ answers_page.previous_page_number }}">Предыдущая</a></li>
+                                {% endif %}
+                                <li class="page-item active"><span class="page-link">{{ answers_page.number }} из {{ answers_page.paginator.num_pages }}</span></li>
+                                {% if answers_page.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ answers_page.next_page_number }}">Следующая</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section id="activity">
+                    <div class="mt-4">
+                        <h5>Последняя активность</h5>
+                        
+                        <div class="timeline">
+                            {% for question in user_questions|slice:":3" %}
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <div class="timeline-marker me-3">
+                                        <div class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">Задал вопрос</div>
+                                        <div class="timeline-description">
+                                            <a href="{% url 'question' question.id %}">"{{ question.title }}"</a>
+                                        </div>
+                                        <div class="timeline-time text-muted">{{ question.time_ago }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="settings">
+                    <div class="mt-4">
+                        <h5>Настройки профиля</h5>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Информация профиля</h6>
+                            </div>
+                            <div class="card-body">
+                                <form>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="nickname" class="form-label">Никнейм</label>
+                                                <input type="text" class="form-control" id="nickname" value="{{ profile_user.username }}" required>
+                                                <div class="form-text">Отображается в профиле и комментариях</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="fullName" class="form-label">Полное имя</label>
+                                                <input type="text" class="form-control" id="fullName" value="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" value="{{ profile_user.email }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="bio" class="form-label">О себе</label>
+                                        <textarea class="form-control" id="bio" rows="3"></textarea>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

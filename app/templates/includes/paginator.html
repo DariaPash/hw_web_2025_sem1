@@ -1,0 +1,43 @@
+{% load pagination_tags %}
+{% if page.paginator.num_pages > 1 %}
+<nav aria-label="{{ aria_label|default:'Pagination' }}" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?{{ page_param|default:'page' }}={{ page.previous_page_number }}">Предыдущая</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Предыдущая</span>
+        </li>
+        {% endif %}
+        
+        {% get_pagination_pages page.number page.paginator.num_pages as pagination_pages %}
+        {% for page_info in pagination_pages %}
+            {% if page_info.type == 'ellipsis' %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            {% elif page_info.type == 'current' %}
+            <li class="page-item active">
+                <span class="page-link">{{ page_info.num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?{{ page_param|default:'page' }}={{ page_info.num }}">{{ page_info.num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?{{ page_param|default:'page' }}={{ page.next_page_number }}">Следующая</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Следующая</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

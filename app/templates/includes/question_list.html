@@ -1,0 +1,46 @@
+{% load static %}
+<div class="questions-list">
+    {% for question in questions %}
+    <div class="question-item d-flex">
+        <div class="question-stats p-2 border rounded shadow-sm text-center" style="width: 90px; margin-right: 4px;">
+            <div class="vote-counts mb-2">
+              <span class="text-success"><i class="bi bi-hand-thumbs-up"></i> {{ question.votes_up }}</span><br>
+              <span class="text-danger"><i class="bi bi-hand-thumbs-down"></i> {{ question.votes_down }}</span>
+            </div>
+          
+            <div class="vote-buttons mb-2">
+              <button class="btn btn-outline-success btn-sm mb-1" title="Повысить рейтинг">
+                <i class="bi bi-hand-thumbs-up-fill"></i>
+              </button><br>
+              <button class="btn btn-outline-danger btn-sm" title="Понизить рейтинг">
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+              </button>
+            </div>
+
+            <div class="answers fw-bold text-success">
+              <i class="bi bi-chat-dots"></i> {{ question.answers_count }}
+            </div>
+          </div>
+        <div class="question-content">
+            <a href="{% url 'question' question.id %}" class="question-title">
+                {{ question.title }}
+            </a>
+            <div class="question-preview">
+                {{ question.preview }}
+            </div>
+            <div class="question-meta">
+                <img src="data:image/jpeg;base64,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" alt="Avatar" class="user-avatar-small" />
+                Спросил {% if question.author %}<a href="{% url 'profile' question.author.username %}">{{ question.author_name }}</a>{% else %}{{ question.author_name }}{% endif %} {{ question.time_ago }}
+            </div>
+            <div class="question-tags">
+                {% for tag in question.tags.all %}
+                <a href="{% url 'tag' tag.name %}" class="tag">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'includes/paginator.html' with page=page aria_label='Questions pagination' %}
+
