@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: my-postgres-new
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: myapp
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d myapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  centrifugo:
+    image: centrifugo/centrifugo:v5
+    container_name: my-centrifugo
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./centrifugo_config.json:/centrifugo.json
+    command: centrifugo -c /centrifugo.json
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
