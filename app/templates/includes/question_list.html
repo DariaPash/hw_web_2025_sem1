@@ -1,0 +1,55 @@
+{% load static %}
+{% load user_tags %}
+<div class="questions-list">
+    {% for question in questions %}
+    <div class="question-item d-flex">
+        <div class="question-stats p-2 border rounded shadow-sm text-center" style="width: 90px; margin-right: 4px;">
+            <div class="vote-counts mb-2">
+              <span class="text-success"><i class="bi bi-hand-thumbs-up"></i> <span class="question-likes-count-{{ question.id }}">{{ question.votes_up }}</span></span><br>
+              <span class="text-danger"><i class="bi bi-hand-thumbs-down"></i> <span class="question-dislikes-count-{{ question.id }}">{{ question.votes_down }}</span></span>
+            </div>
+          
+            {% if user.is_authenticated %}
+            {% dict_get user_question_likes question.id as user_question_like %}
+            <div class="vote-buttons mb-2">
+              <button class="btn btn-sm mb-1 question-like-btn {% if user_question_like and user_question_like.is_positive %}btn-success{% else %}btn-outline-success{% endif %}" 
+                      data-question-id="{{ question.id }}" 
+                      data-type="like" 
+                      title="Повысить рейтинг">
+                <i class="bi bi-hand-thumbs-up-fill"></i>
+              </button><br>
+              <button class="btn btn-sm question-dislike-btn {% if user_question_like and not user_question_like.is_positive %}btn-danger{% else %}btn-outline-danger{% endif %}" 
+                      data-question-id="{{ question.id }}" 
+                      data-type="dislike" 
+                      title="Понизить рейтинг">
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+              </button>
+            </div>
+            {% endif %}
+
+            <div class="answers fw-bold text-success">
+              <i class="bi bi-chat-dots"></i> {{ question.answers_count }}
+            </div>
+          </div>
+        <div class="question-content">
+            <a href="{% url 'question' question.id %}" class="question-title">
+                {{ question.title }}
+            </a>
+            <div class="question-preview">
+                {{ question.preview }}
+            </div>
+            <div class="question-meta">
+                <img src="{% if question.author %}{% user_avatar_url question.author %}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" alt="Avatar" class="user-avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+                Спросил {% if question.author %}<a href="{% url 'profile' question.author.username %}">{{ question.author_name }}</a>{% else %}{{ question.author_name }}{% endif %} {{ question.time_ago }}
+            </div>
+            <div class="question-tags">
+                {% for tag in question.tags.all %}
+                <a href="{% url 'tag' tag.name %}" class="tag">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'includes/paginator.html' with page=page aria_label='Questions pagination' %}
