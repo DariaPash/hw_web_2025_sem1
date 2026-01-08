@@ -1,0 +1,16 @@
+{
+  "token_hmac_secret_key": "your-secret-key-here",
+  "admin_password": "admin",
+  "admin_secret": "your-secret-key-here",
+  "api_key": "your-secret-key-here",
+  "allowed_origins": ["http://localhost:8000", "http://127.0.0.1:8000"],
+  "websocket_compression": true,
+  "log_level": "debug",
+  "log_file": "centrifugo.log",
+  "client_insecure": true,
+  "client_anonymous": true,
+  "channel": {
+    "allow_publish_for_anonymous": true,
+    "allow_subscribe_for_anonymous": true
+  }
+}

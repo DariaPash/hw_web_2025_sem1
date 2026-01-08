@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Поиск{% if query %}: {{ query }}{% endif %} - AskDi{% endblock %}
+
+{% block content %}
+<div class="search-results">
+    <h2 class="mb-4">Результаты поиска{% if query %}: "{{ query }}"{% endif %}</h2>
+    
+    {% if query %}
+        {% if questions %}
+            <p class="text-muted mb-3">Найдено вопросов: {{ page.paginator.count }}</p>
+            
+            {% include 'includes/question_list.html' %}
+            
+            {% if page.has_other_pages %}
+                {% include 'includes/paginator.html' with page=page %}
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                По запросу "{{ query }}" ничего не найдено. Попробуйте изменить поисковый запрос.
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-warning" role="alert">
+            Введите поисковый запрос в поле поиска.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
