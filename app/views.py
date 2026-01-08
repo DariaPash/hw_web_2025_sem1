@@ -27,7 +27,6 @@ def index(request):
     questions = Question.objects.new()
     page = _get_questions_with_pagination(questions, request)
     
-    # Получаем информацию о лайках пользователя
     user_question_likes = {}
     if request.user.is_authenticated:
         question_ids = [q.id for q in page.object_list]
@@ -45,7 +44,6 @@ def hot(request):
     questions = Question.objects.best()
     page = _get_questions_with_pagination(questions, request)
     
-    # Получаем информацию о лайках пользователя
     user_question_likes = {}
     if request.user.is_authenticated:
         question_ids = [q.id for q in page.object_list]
@@ -64,7 +62,6 @@ def tag(request, tag_name):
     questions = Question.objects.by_tag(tag_name)
     page = _get_questions_with_pagination(questions, request)
     
-    # Получаем информацию о лайках пользователя
     user_question_likes = {}
     if request.user.is_authenticated:
         question_ids = [q.id for q in page.object_list]
@@ -89,7 +86,6 @@ def question_view(request, question_id):
     
     answer_form = AnswerForm()
     
-    # Получаем информацию о лайках пользователя
     user_question_like = None
     user_answer_likes = {}
     if request.user.is_authenticated:
@@ -98,7 +94,6 @@ def question_view(request, question_id):
         except QuestionLike.DoesNotExist:
             pass
         
-        # Получаем лайки пользователя для всех ответов на странице
         answer_ids = [answer.id for answer in answers_page.object_list]
         user_likes = AnswerLike.objects.filter(answer_id__in=answer_ids, user=request.user)
         user_answer_likes = {like.answer_id: like for like in user_likes}
@@ -129,10 +124,6 @@ def question_view(request, question_id):
             }
             publish_to_centrifugo(channel, answer_data)
             
-            # Находим страницу, на которой находится новый ответ
-            # Поскольку ответы отсортированы по -is_correct, -created_at,
-            # новый ответ будет в начале списка (если не помечен как правильный)
-            # или в начале правильных ответов (если помечен)
             all_answers = list(question_obj.answers.select_related('author').order_by('-is_correct', '-created_at'))
             try:
                 answer_index = all_answers.index(answer)
@@ -140,7 +131,6 @@ def question_view(request, question_id):
             except (ValueError, IndexError):
                 page_number = 1
             
-            # Редирект на страницу вопроса с якорем на добавленный ответ
             return redirect(f"{question_obj.get_url()}?page={page_number}#answer-{answer.id}")
     
     return render(request, 'question.html', {
@@ -154,7 +144,6 @@ def question_view(request, question_id):
 
 
 def ask(request):
-    # Если пользователь не авторизован, редиректим на логин с continue
     if not request.user.is_authenticated:
         return redirect(f"{reverse('login')}?continue={request.path}")
     
@@ -170,7 +159,6 @@ def ask(request):
 
 
 def search(request):
-    """Полнотекстовый поиск по вопросам"""
     query = request.GET.get('q', '').strip()
     questions = Question.objects.none()
     
@@ -198,7 +186,6 @@ def search(request):
     
     page = _get_questions_with_pagination(questions, request)
     
-    # Получаем информацию о лайках пользователя
     user_question_likes = {}
     if request.user.is_authenticated:
         question_ids = [q.id for q in page.object_list]
@@ -215,7 +202,6 @@ def search(request):
 
 @require_http_methods(["GET"])
 def search_suggestions(request):
-    """AJAX endpoint для поисковых подсказок"""
     query = request.GET.get('q', '').strip()
     
     if len(query) < 2:
@@ -242,12 +228,10 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect('index')
     
-    # Получаем URL для редиректа из параметра continue
     next_url = request.GET.get('continue', None)
     
     if request.method == 'POST':
         form = LoginForm(request.POST)
-        # Получаем next из POST или используем сохраненный из GET
         post_next = request.POST.get('next', next_url)
         if post_next:
             next_url = post_next
@@ -255,21 +239,23 @@ def login_view(request):
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
-            user = authenticate(username=username, password=password)
+            user = authenticate(request, username=username, password=password)
+            
             if user is not None:
-                login(request, user)
-                # Редирект на исходную страницу или главную
-                if next_url:
-                    # Проверяем, что это безопасный редирект (не внешний URL)
-                    if next_url.startswith('/'):
-                        return redirect(next_url)
-                    # Если это именованный URL, пробуем использовать его
-                    try:
-                        from django.urls import reverse
-                        return redirect(next_url)
-                    except:
-                        pass
-                return redirect('index')
+                if user.is_active:
+                    login(request, user)
+                    if next_url:
+                        if next_url.startswith('/'):
+                            return redirect(next_url)
+                        try:
+                            return redirect(next_url)
+                        except:
+                            pass
+                    return redirect('index')
+                else:
+                    form.add_error(None, 'Ваш аккаунт неактивен. Обратитесь к администратору.')
+            else:
+                form.add_error('password', 'Неверный пароль')
     else:
         form = LoginForm()
     
@@ -284,7 +270,6 @@ def signup_view(request):
         form = SignupForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
-            # Автоматически логиним пользователя после регистрации
             login(request, user)
             return redirect('index')
     else:
@@ -295,30 +280,28 @@ def signup_view(request):
 
 def logout_view(request):
     logout(request)
-    # Редирект на главную страницу
     return redirect('index')
 
 
 @login_required
 def profile_edit(request):
-    # Убеждаемся, что профиль существует
     from .models import Profile
     from django.contrib import messages
     profile, created = Profile.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
-        form = ProfileEditForm(request.POST, request.FILES, instance=profile, user=request.user)
+        form = ProfileEditForm(
+            request.POST, 
+            request.FILES, 
+            instance=profile, 
+            user=request.user
+        )
         if form.is_valid():
             form.save()
             messages.success(request, 'Профиль успешно обновлен!')
             return redirect('profile_edit')
     else:
         form = ProfileEditForm(instance=profile, user=request.user)
-        # Убеждаемся, что initial значения установлены
-        if not form.initial.get('first_name') and request.user.first_name:
-            form.initial['first_name'] = request.user.first_name
-        if not form.initial.get('email') and request.user.email:
-            form.initial['email'] = request.user.email
     
     return render(request, 'profile_edit.html', {'form': form, 'user': request.user})
 
@@ -326,12 +309,16 @@ def profile_edit(request):
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
     
-    # Обработка формы настроек (только для владельца профиля)
     if request.user.is_authenticated and request.user == profile_user and request.method == 'POST':
         from .models import Profile
         from django.contrib import messages
         profile_obj, created = Profile.objects.get_or_create(user=profile_user)
-        form = ProfileEditForm(request.POST, request.FILES, instance=profile_obj, user=profile_user)
+        form = ProfileEditForm(
+            request.POST, 
+            request.FILES, 
+            instance=profile_obj, 
+            user=profile_user
+        )
         if form.is_valid():
             form.save()
             messages.success(request, 'Профиль успешно обновлен!')
@@ -342,10 +329,6 @@ def profile(request, username):
             from .models import Profile
             profile_obj, created = Profile.objects.get_or_create(user=profile_user)
             form = ProfileEditForm(instance=profile_obj, user=profile_user)
-            if not form.initial.get('first_name') and profile_user.first_name:
-                form.initial['first_name'] = profile_user.first_name
-            if not form.initial.get('email') and profile_user.email:
-                form.initial['email'] = profile_user.email
     
     context = prepare_profile_context(profile_user, request)
     context['settings_form'] = form
@@ -355,31 +338,25 @@ def profile(request, username):
 @login_required
 @require_http_methods(["POST"])
 def question_like(request, question_id):
-    """AJAX endpoint для лайка/дизлайка вопроса"""
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Требуется авторизация'}, status=401)
     
     question = get_object_or_404(Question, id=question_id)
-    like_type = request.POST.get('type', 'like')  # 'like' или 'dislike'
+    like_type = request.POST.get('type', 'like')
     is_positive = like_type == 'like'
     
-    # Проверяем, есть ли уже лайк от этого пользователя
     try:
         like = QuestionLike.objects.get(question=question, user=request.user)
-        # Если тип лайка тот же, удаляем его (отмена)
         if like.is_positive == is_positive:
             like.delete()
-            # Обновляем счетчики
             if is_positive:
                 question.likes_cnt = max(0, question.likes_cnt - 1)
             else:
                 question.dislikes_cnt = max(0, question.dislikes_cnt - 1)
             question.save(update_fields=['likes_cnt', 'dislikes_cnt'])
         else:
-            # Меняем тип лайка
             like.is_positive = is_positive
             like.save()
-            # Обновляем счетчики
             if is_positive:
                 question.likes_cnt += 1
                 question.dislikes_cnt = max(0, question.dislikes_cnt - 1)
@@ -388,16 +365,13 @@ def question_like(request, question_id):
                 question.likes_cnt = max(0, question.likes_cnt - 1)
             question.save(update_fields=['likes_cnt', 'dislikes_cnt'])
     except QuestionLike.DoesNotExist:
-        # Создаем новый лайк
         QuestionLike.objects.create(question=question, user=request.user, is_positive=is_positive)
-        # Обновляем счетчики
         if is_positive:
             question.likes_cnt += 1
         else:
             question.dislikes_cnt += 1
         question.save(update_fields=['likes_cnt', 'dislikes_cnt'])
     
-    # Обновляем объект из БД
     question.refresh_from_db()
     
     return JsonResponse({
@@ -410,31 +384,25 @@ def question_like(request, question_id):
 @login_required
 @require_http_methods(["POST"])
 def answer_like(request, answer_id):
-    """AJAX endpoint для лайка/дизлайка ответа"""
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Требуется авторизация'}, status=401)
     
     answer = get_object_or_404(Answer, id=answer_id)
-    like_type = request.POST.get('type', 'like')  # 'like' или 'dislike'
+    like_type = request.POST.get('type', 'like')
     is_positive = like_type == 'like'
     
-    # Проверяем, есть ли уже лайк от этого пользователя
     try:
         like = AnswerLike.objects.get(answer=answer, user=request.user)
-        # Если тип лайка тот же, удаляем его (отмена)
         if like.is_positive == is_positive:
             like.delete()
-            # Обновляем счетчики
             if is_positive:
                 answer.likes_cnt = max(0, answer.likes_cnt - 1)
             else:
                 answer.dislikes_cnt = max(0, answer.dislikes_cnt - 1)
             answer.save(update_fields=['likes_cnt', 'dislikes_cnt'])
         else:
-            # Меняем тип лайка
             like.is_positive = is_positive
             like.save()
-            # Обновляем счетчики
             if is_positive:
                 answer.likes_cnt += 1
                 answer.dislikes_cnt = max(0, answer.dislikes_cnt - 1)
@@ -443,16 +411,13 @@ def answer_like(request, answer_id):
                 answer.likes_cnt = max(0, answer.likes_cnt - 1)
             answer.save(update_fields=['likes_cnt', 'dislikes_cnt'])
     except AnswerLike.DoesNotExist:
-        # Создаем новый лайк
         AnswerLike.objects.create(answer=answer, user=request.user, is_positive=is_positive)
-        # Обновляем счетчики
         if is_positive:
             answer.likes_cnt += 1
         else:
             answer.dislikes_cnt += 1
         answer.save(update_fields=['likes_cnt', 'dislikes_cnt'])
     
-    # Обновляем объект из БД
     answer.refresh_from_db()
     
     return JsonResponse({
@@ -465,18 +430,15 @@ def answer_like(request, answer_id):
 @login_required
 @require_http_methods(["POST"])
 def mark_answer_correct(request, question_id, answer_id):
-    """AJAX endpoint для отметки правильного ответа"""
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Требуется авторизация'}, status=401)
     
     question = get_object_or_404(Question, id=question_id)
     answer = get_object_or_404(Answer, id=answer_id, question=question)
     
-    # Проверяем, что пользователь - автор вопроса
     if question.author != request.user:
         return JsonResponse({'error': 'Только автор вопроса может отмечать правильный ответ'}, status=403)
     
-    # Переключаем статус правильного ответа
     answer.is_correct = not answer.is_correct
     answer.save(update_fields=['is_correct'])
     

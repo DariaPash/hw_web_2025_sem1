@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from .models import Question, Answer, Tag, Profile
@@ -23,18 +22,17 @@ class LoginForm(forms.Form):
         })
     )
 
-    def clean(self):
-        cleaned_data = super().clean()
-        username = cleaned_data.get('username')
-        password = cleaned_data.get('password')
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if not User.objects.filter(username=username).exists():
+            raise ValidationError('Пользователь с таким именем не существует')
+        return username
 
-        if username and password:
-            user = authenticate(username=username, password=password)
-            if user is None:
-                raise ValidationError('Неверное имя пользователя или пароль')
-            if not user.is_active:
-                raise ValidationError('Аккаунт неактивен')
-        return cleaned_data
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if not password or len(password) < 1:
+            raise ValidationError('Пароль не может быть пустым')
+        return password
 
 
 class SignupForm(forms.ModelForm):
@@ -64,7 +62,7 @@ class SignupForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name']
+        fields = ['username', 'email', 'password']
         widgets = {
             'username': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -75,21 +73,20 @@ class SignupForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Введите email'
             }),
-            'first_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите имя'
-            }),
         }
         labels = {
             'username': 'Имя пользователя',
             'email': 'Email',
-            'first_name': 'Имя',
         }
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
         if User.objects.filter(username=username).exists():
             raise ValidationError('Пользователь с таким именем уже существует')
+        
+        if len(username) < 3:
+            raise ValidationError('Имя пользователя должно содержать минимум 3 символа')
+        
         return username
 
     def clean_email(self):
@@ -108,14 +105,16 @@ class SignupForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])
+        
         if commit:
-            user.save()
-            # Создаем профиль для пользователя
-            profile, created = Profile.objects.get_or_create(user=user)
-            # Сохраняем аватар, если он был загружен
-            if 'avatar' in self.cleaned_data and self.cleaned_data['avatar']:
-                profile.avatar = self.cleaned_data['avatar']
-                profile.save()
+            user.save(update_fields=['username', 'email', 'password'])
+            
+            profile = Profile.objects.create(
+                user=user,
+                avatar=self.cleaned_data.get('avatar')
+            )
+            profile.save(update_fields=['avatar'])
+            
         return user
 
 
@@ -128,12 +127,12 @@ class ProfileEditForm(forms.ModelForm):
         })
     )
     first_name = forms.CharField(
-        label='Полное имя',
+        label='Имя',
         max_length=150,
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Введите полное имя'
+            'placeholder': 'Введите ваше имя'
         })
     )
 
@@ -151,28 +150,32 @@ class ProfileEditForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)
+        self.user = kwargs.pop('user')
         super().__init__(*args, **kwargs)
-        if self.user:
-            # Устанавливаем initial значения только если форма не bound (GET запрос)
-            if not self.is_bound:
-                self.fields['email'].initial = self.user.email
-                self.fields['first_name'].initial = self.user.first_name or ''
+        
+        self.fields['email'].initial = self.user.email
+        self.fields['first_name'].initial = self.user.first_name
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if self.user and User.objects.filter(email=email).exclude(pk=self.user.pk).exists():
+        if User.objects.filter(email=email).exclude(pk=self.user.pk).exists():
             raise ValidationError('Пользователь с таким email уже существует')
         return email
 
     def save(self, commit=True):
         profile = super().save(commit=False)
-        if self.user:
-            self.user.email = self.cleaned_data['email']
-            self.user.first_name = self.cleaned_data.get('first_name', '')
-            if commit:
-                self.user.save()
-                profile.save()
+        
+        self.user.email = self.cleaned_data['email']
+        self.user.first_name = self.cleaned_data['first_name']
+        
+        if commit:
+            user_update_fields = ['email']
+            if 'first_name' in self.changed_data:
+                user_update_fields.append('first_name')
+            
+            self.user.save(update_fields=user_update_fields)
+            profile.save()
+        
         return profile
 
 
@@ -183,7 +186,8 @@ class QuestionForm(forms.ModelForm):
             'class': 'form-control',
             'placeholder': 'python django web'
         }),
-        help_text='Введите теги через пробел (например: python django web)'
+        help_text='Введите теги через пробел (например: python django web)',
+        required=False
     )
 
     class Meta:
@@ -206,26 +210,52 @@ class QuestionForm(forms.ModelForm):
             'text': 'Текст вопроса',
         }
 
+    def clean_title(self):
+        title = self.cleaned_data.get('title')
+        if len(title) < 10:
+            raise ValidationError('Заголовок должен содержать минимум 10 символов')
+        return title
+
+    def clean_text(self):
+        text = self.cleaned_data.get('text')
+        if len(text) < 20:
+            raise ValidationError('Текст вопроса должен содержать минимум 20 символов')
+        return text
+
     def clean_tags(self):
-        tags_str = self.cleaned_data.get('tags', '')
-        if not tags_str.strip():
+        tags_str = self.cleaned_data.get('tags', '').strip()
+        if not tags_str:
             raise ValidationError('Необходимо указать хотя бы один тег')
+        
+        tag_names = [tag.strip().lower() for tag in tags_str.split() if tag.strip()]
+        if len(tag_names) > 5:
+            raise ValidationError('Можно указать не более 5 тегов')
+        
+        for tag_name in tag_names:
+            if len(tag_name) > 20:
+                raise ValidationError(f'Тег "{tag_name}" слишком длинный (максимум 20 символов)')
+            if ' ' in tag_name:
+                raise ValidationError(f'Тег "{tag_name}" не должен содержать пробелы')
+        
         return tags_str
 
     def save(self, commit=True, author=None):
         question = super().save(commit=False)
         if author:
             question.author = author
+        
         if commit:
             question.save()
-            # Обрабатываем теги
+            
             tags_str = self.cleaned_data.get('tags', '')
-            tag_names = [tag.strip().lower() for tag in tags_str.split() if tag.strip()]
-            tags = []
-            for tag_name in tag_names:
-                tag, created = Tag.objects.get_or_create(name=tag_name)
-                tags.append(tag)
-            question.tags.set(tags)
+            if tags_str:
+                tag_names = [tag.strip().lower() for tag in tags_str.split() if tag.strip()]
+                tags = []
+                for tag_name in tag_names:
+                    tag, created = Tag.objects.get_or_create(name=tag_name)
+                    tags.append(tag)
+                question.tags.set(tags)
+        
         return question
 
 
@@ -245,12 +275,20 @@ class AnswerForm(forms.ModelForm):
             'text': 'Текст ответа',
         }
 
+    def clean_text(self):
+        text = self.cleaned_data.get('text')
+        if len(text) < 10:
+            raise ValidationError('Ответ должен содержать минимум 10 символов')
+        return text
+
     def save(self, commit=True, question=None, author=None):
         answer = super().save(commit=False)
         if question:
             answer.question = question
         if author:
             answer.author = author
+        
         if commit:
             answer.save()
+        
         return answer
