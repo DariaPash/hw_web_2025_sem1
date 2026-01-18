@@ -152,7 +152,6 @@ class Answer(models.Model):
 
 
 class Profile(models.Model):
-    # Коэффициенты репутации
     REPUTATION_QUESTION = 5
     REPUTATION_ANSWER = 3
     REPUTATION_ACCEPTED_ANSWER = 10
@@ -171,7 +170,6 @@ class Profile(models.Model):
         """Возвращает URL аватара пользователя или дефолтный аватар"""
         if self.avatar:
             return self.avatar.url
-        # Дефолтный аватар
         from django.contrib.staticfiles.storage import staticfiles_storage
         try:
             return staticfiles_storage.url('img/default-avatar.png')

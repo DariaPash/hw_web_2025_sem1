@@ -97,7 +97,7 @@
     </div>
     {% endif %}
     
-    <form method="post" action="{% url 'question' question.id %}">
+    <form method="post" action="{% url 'answer_create' question.id %}">
         {% csrf_token %}
         <div class="mb-3">
             <label for="{{ answer_form.text.id_for_label }}" class="form-label">{{ answer_form.text.label }}</label>
@@ -126,7 +126,6 @@
 
 {% block extra_js %}
 <script>
-    // Скролл к якорю при загрузке страницы, если есть якорь в URL
     if (window.location.hash) {
         setTimeout(function() {
             var target = document.querySelector(window.location.hash);

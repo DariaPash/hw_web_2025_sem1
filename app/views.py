@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.db import models
 from .models import Question, Answer, Tag
 from .forms import LoginForm, SignupForm, ProfileEditForm, QuestionForm, AnswerForm
 from .utils import paginate, prepare_profile_context
@@ -44,23 +44,45 @@ def question_view(request, question_id):
     
     answer_form = AnswerForm()
     
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect(f"{reverse('login')}?continue={request.path}")
-        
-        answer_form = AnswerForm(request.POST)
-        if answer_form.is_valid():
-            answer = answer_form.save(commit=False, question=question_obj, author=request.user)
-            answer.save()
-            all_answers = list(question_obj.answers.select_related('author').order_by('-is_correct', '-created_at'))
-            try:
-                answer_index = all_answers.index(answer)
-                page_number = (answer_index // 10) + 1
-            except (ValueError, IndexError):
-                page_number = 1
+    return render(request, 'question.html', {
+        'question': question_obj,
+        'answers_page': answers_page,
+        'answers': answers_page.object_list,
+        'answer_form': answer_form,
+    })
 
-            return redirect(f"{question_obj.get_url()}?page={page_number}#answer-{answer.id}")
+
+@login_required
+def answer_create(request, question_id):
+    question_obj = get_object_or_404(
+        Question.objects.select_related('author').prefetch_related('tags'),
+        id=question_id
+    )
     
+    answer_form = AnswerForm(request.POST)
+    if answer_form.is_valid():
+        answer = answer_form.save(commit=False, question=question_obj, author=request.user)
+        answer.save()
+        
+        from django.db.models import Q
+        if answer.is_correct:
+            answers_before = question_obj.answers.filter(
+                Q(is_correct=True, created_at__gt=answer.created_at) |
+                Q(is_correct=True, created_at=answer.created_at, id__lt=answer.id)
+            ).count()
+        else:
+            # Для неправильных ответов: все правильные + неправильные с более ранним created_at или тем же created_at но меньшим id
+            answers_before = question_obj.answers.filter(
+                Q(is_correct=True) |
+                Q(is_correct=False, created_at__gt=answer.created_at) |
+                Q(is_correct=False, created_at=answer.created_at, id__lt=answer.id)
+            ).count()
+        
+        page_number = (answers_before // 10) + 1
+        return redirect(f"{question_obj.get_url()}?page={page_number}#answer-{answer.id}")
+    
+    answers = question_obj.answers.select_related('author').order_by('-is_correct', '-created_at')
+    answers_page = paginate(answers, request, per_page=10)
     return render(request, 'question.html', {
         'question': question_obj,
         'answers_page': answers_page,
@@ -92,24 +114,19 @@ def login_view(request):
     
     if request.method == 'POST':
         form = LoginForm(request.POST)
-        post_next = request.POST.get('next', next_url)
-        if post_next:
-            next_url = post_next
-            
         if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(username=username, password=password)
+            user = form.user
             if user is not None:
                 login(request, user)
                 if next_url:
                     if next_url.startswith('/'):
-                        return redirect(next_url)
-                    try:
-                        from django.urls import reverse
-                        return redirect(next_url)
-                    except:
-                        pass
+                        if not next_url.startswith('//') and not '://' in next_url:
+                            try:
+                                from django.urls import resolve
+                                resolve(next_url)
+                                return redirect(next_url)
+                            except:
+                                pass
                 return redirect('index')
     else:
         form = LoginForm()

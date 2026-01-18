@@ -2,6 +2,9 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
+from django.db import transaction
+from django.conf import settings
 from .models import Question, Answer, Tag, Profile
 
 
@@ -23,6 +26,10 @@ class LoginForm(forms.Form):
         })
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = None
+
     def clean(self):
         cleaned_data = super().clean()
         username = cleaned_data.get('username')
@@ -34,6 +41,7 @@ class LoginForm(forms.Form):
                 raise ValidationError('Неверное имя пользователя или пароль')
             if not user.is_active:
                 raise ValidationError('Аккаунт неактивен')
+            self.user = user
         return cleaned_data
 
 
@@ -77,6 +85,10 @@ class SignupForm(forms.ModelForm):
             'email': 'Email',
             'first_name': 'Имя',
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].required = False
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
@@ -90,6 +102,12 @@ class SignupForm(forms.ModelForm):
             raise ValidationError('Пользователь с таким email уже существует')
         return email
 
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if password:
+            validate_password(password, self.instance if self.instance.pk else None)
+        return password
+
     def clean_password2(self):
         password = self.cleaned_data.get('password')
         password2 = self.cleaned_data.get('password2')
@@ -97,6 +115,7 @@ class SignupForm(forms.ModelForm):
             raise ValidationError('Пароли не совпадают')
         return password2
 
+    @transaction.atomic
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])
@@ -141,10 +160,17 @@ class ProfileEditForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if self.user:
-            # Устанавливаем initial значения только если форма не bound (GET запрос)
             if not self.is_bound:
                 self.fields['email'].initial = self.user.email
                 self.fields['first_name'].initial = self.user.first_name or ''
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get('avatar')
+        if avatar:
+            max_size = 5 * 1024 * 1024  
+            if avatar.size > max_size:
+                raise ValidationError(f'Размер файла не должен превышать {max_size // (1024 * 1024)}MB')
+        return avatar
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -152,6 +178,7 @@ class ProfileEditForm(forms.ModelForm):
             raise ValidationError('Пользователь с таким email уже существует')
         return email
 
+    @transaction.atomic
     def save(self, commit=True):
         profile = super().save(commit=False)
         if self.user:
@@ -197,22 +224,44 @@ class QuestionForm(forms.ModelForm):
         tags_str = self.cleaned_data.get('tags', '')
         if not tags_str.strip():
             raise ValidationError('Необходимо указать хотя бы один тег')
+        
+        tag_names = [tag.strip() for tag in tags_str.split() if tag.strip()]
+        
+        max_tags = 5
+        if len(tag_names) > max_tags:
+            raise ValidationError(f'Можно указать не более {max_tags} тегов')
+        
+        max_tag_length = 50  
+        for tag_name in tag_names:
+            if len(tag_name) > max_tag_length:
+                raise ValidationError(f'Тег "{tag_name}" слишком длинный (максимум {max_tag_length} символов)')
+        
         return tags_str
 
+    @transaction.atomic
     def save(self, commit=True, author=None):
         question = super().save(commit=False)
         if author:
             question.author = author
         if commit:
             question.save()
-            # Обрабатываем теги
             tags_str = self.cleaned_data.get('tags', '')
             tag_names = [tag.strip().lower() for tag in tags_str.split() if tag.strip()]
-            tags = []
+            
+            existing_tags = {tag.name: tag for tag in Tag.objects.filter(name__in=tag_names)}
+            
+            tags_to_create = []
             for tag_name in tag_names:
-                tag, created = Tag.objects.get_or_create(name=tag_name)
-                tags.append(tag)
-            question.tags.set(tags)
+                if tag_name not in existing_tags:
+                    tags_to_create.append(Tag(name=tag_name))
+            
+            if tags_to_create:
+                Tag.objects.bulk_create(tags_to_create, ignore_conflicts=True)
+                created_tags = Tag.objects.filter(name__in=[t.name for t in tags_to_create])
+                for tag in created_tags:
+                    existing_tags[tag.name] = tag
+            
+            question.tags.set([existing_tags[tag_name] for tag_name in tag_names])
         return question
 
 
@@ -231,6 +280,13 @@ class AnswerForm(forms.ModelForm):
         labels = {
             'text': 'Текст ответа',
         }
+
+    def clean_text(self):
+        text = self.cleaned_data.get('text', '')
+        max_length = 10000 
+        if len(text) > max_length:
+            raise ValidationError(f'Текст ответа не должен превышать {max_length} символов')
+        return text
 
     def save(self, commit=True, question=None, author=None):
         answer = super().save(commit=False)
