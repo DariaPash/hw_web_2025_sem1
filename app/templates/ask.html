@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Задать вопрос - AskDi{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <h2 class="mb-4">Задать новый вопрос</h2>
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" action="{% url 'ask' %}">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                <input type="text" 
+                       class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
+                       id="{{ form.title.id_for_label }}" 
+                       name="{{ form.title.name }}" 
+                       value="{{ form.title.value|default:'' }}"
+                       placeholder="Введите заголовок вопроса"
+                       autofocus>
+                {% if form.title.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.title.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="form-text">Сформулируйте вопрос четко и кратко</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.text.id_for_label }}" class="form-label">{{ form.text.label }}</label>
+                <textarea class="form-control {% if form.text.errors %}is-invalid{% endif %}" 
+                          id="{{ form.text.id_for_label }}" 
+                          name="{{ form.text.name }}" 
+                          rows="10" 
+                          placeholder="Опишите ваш вопрос подробно...">{{ form.text.value|default:'' }}</textarea>
+                {% if form.text.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.text.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="form-text">Опишите проблему или вопрос максимально подробно</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.tags.id_for_label }}" class="form-label">{{ form.tags.label }}</label>
+                <input type="text" 
+                       class="form-control {% if form.tags.errors %}is-invalid{% endif %}" 
+                       id="{{ form.tags.id_for_label }}" 
+                       name="{{ form.tags.name }}" 
+                       value="{{ form.tags.value|default:'' }}"
+                       placeholder="python django web">
+                {% if form.tags.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.tags.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="form-text">{{ form.tags.help_text }}</div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Опубликовать вопрос</button>
+                <a href="{% url 'index' %}" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

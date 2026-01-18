@@ -1,0 +1,46 @@
+{% load static %}
+{% load user_tags %}
+<div class="questions-list">
+    {% for question in questions %}
+    <div class="question-item d-flex">
+        <div class="question-stats p-2 border rounded shadow-sm text-center" style="width: 90px; margin-right: 4px;">
+            <div class="vote-counts mb-2">
+              <span class="text-success"><i class="bi bi-hand-thumbs-up"></i> {{ question.votes_up }}</span><br>
+              <span class="text-danger"><i class="bi bi-hand-thumbs-down"></i> {{ question.votes_down }}</span>
+            </div>
+          
+            <div class="vote-buttons mb-2">
+              <button class="btn btn-outline-success btn-sm mb-1" title="Повысить рейтинг">
+                <i class="bi bi-hand-thumbs-up-fill"></i>
+              </button><br>
+              <button class="btn btn-outline-danger btn-sm" title="Понизить рейтинг">
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+              </button>
+            </div>
+
+            <div class="answers fw-bold text-success">
+              <i class="bi bi-chat-dots"></i> {{ question.answers_count }}
+            </div>
+          </div>
+        <div class="question-content">
+            <a href="{% url 'question' question.id %}" class="question-title">
+                {{ question.title }}
+            </a>
+            <div class="question-preview">
+                {{ question.preview }}
+            </div>
+            <div class="question-meta">
+                <img src="{% if question.author %}{% user_avatar_url question.author %}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" alt="Avatar" class="user-avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+                Спросил {% if question.author %}<a href="{% url 'profile' question.author.username %}">{{ question.author_name }}</a>{% else %}{{ question.author_name }}{% endif %} {{ question.time_ago }}
+            </div>
+            <div class="question-tags">
+                {% for tag in question.tags.all %}
+                <a href="{% url 'tag' tag.name %}" class="tag">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'includes/paginator.html' with page=page aria_label='Questions pagination' %}
