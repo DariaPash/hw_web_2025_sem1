@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load user_tags %}
+
+{% block title %}{{ question.title }} - AskDi{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/bootstrap-icons.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="question-detail mb-4">
+    <div class="d-flex">
+        <div class="question-stats p-2 border rounded shadow-sm text-center" style="width: 90px; margin-right: 15px;">
+            <div class="vote-counts mb-2">
+              <span class="text-success"><i class="bi bi-hand-thumbs-up"></i> <span class="question-likes-count-{{ question.id }}">{{ question.votes_up }}</span></span><br>
+              <span class="text-danger"><i class="bi bi-hand-thumbs-down"></i> <span class="question-dislikes-count-{{ question.id }}">{{ question.votes_down }}</span></span>
+            </div>
+          
+            {% if user.is_authenticated %}
+            <div class="vote-buttons mb-2">
+              <button class="btn btn-sm mb-1 question-like-btn {% if user_question_like and user_question_like.is_positive %}btn-success{% else %}btn-outline-success{% endif %}" 
+                      data-question-id="{{ question.id }}" 
+                      data-type="like" 
+                      title="Повысить рейтинг">
+                <i class="bi bi-hand-thumbs-up-fill"></i>
+              </button><br>
+              <button class="btn btn-sm question-dislike-btn {% if user_question_like and not user_question_like.is_positive %}btn-danger{% else %}btn-outline-danger{% endif %}" 
+                      data-question-id="{{ question.id }}" 
+                      data-type="dislike" 
+                      title="Понизить рейтинг">
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+              </button>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="question-content flex-grow-1">
+            <h2 class="mb-3">{{ question.title }}</h2>
+            <div class="question-text mb-3">
+                {{ question.text }}
+            </div>
+            <div class="question-meta mb-3">
+                <img src="{% if question.author %}{% user_avatar_url question.author %}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" alt="Avatar" class="user-avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+                Спросил {% if question.author %}<a href="{% url 'profile' question.author.username %}">{{ question.author_name }}</a>{% else %}{{ question.author_name }}{% endif %} {{ question.time_ago }}
+            </div>
+            <div class="question-tags">
+                {% for tag in question.tags.all %}
+                <a href="{% url 'tag' tag.name %}" class="tag">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="answers-section">
+    <h3 class="mb-3">Ответы ({{ answers|length }})</h3>
+    
+    {% for answer in answers %}
+    <div class="answer-item d-flex mb-4 p-3 border rounded" id="answer-{{ answer.id }}">
+        <div class="answer-stats p-2 text-center" style="width: 90px; margin-right: 15px;">
+            <div class="vote-counts mb-2">
+              <span class="text-success"><i class="bi bi-hand-thumbs-up"></i> <span class="answer-likes-count-{{ answer.id }}">{{ answer.votes_up }}</span></span><br>
+              <span class="text-danger"><i class="bi bi-hand-thumbs-down"></i> <span class="answer-dislikes-count-{{ answer.id }}">{{ answer.votes_down }}</span></span>
+            </div>
+          
+            {% if user.is_authenticated %}
+            {% dict_get user_answer_likes answer.id as user_answer_like %}
+            <div class="vote-buttons mb-2">
+              <button class="btn btn-sm mb-1 answer-like-btn {% if user_answer_like and user_answer_like.is_positive %}btn-success{% else %}btn-outline-success{% endif %}" 
+                      data-answer-id="{{ answer.id }}" 
+                      data-type="like" 
+                      title="Повысить рейтинг">
+                <i class="bi bi-hand-thumbs-up-fill"></i>
+              </button><br>
+              <button class="btn btn-sm answer-dislike-btn {% if user_answer_like and not user_answer_like.is_positive %}btn-danger{% else %}btn-outline-danger{% endif %}" 
+                      data-answer-id="{{ answer.id }}" 
+                      data-type="dislike" 
+                      title="Понизить рейтинг">
+                <i class="bi bi-hand-thumbs-down-fill"></i>
+              </button>
+            </div>
+            {% endif %}
+            
+            {% if user.is_authenticated and question.author == user %}
+            <div class="correct-answer-control mb-2">
+                {% if answer.is_correct %}
+                <button class="btn btn-success btn-sm mark-correct-btn" 
+                        data-question-id="{{ question.id }}" 
+                        data-answer-id="{{ answer.id }}" 
+                        title="Убрать отметку правильного ответа">
+                    <i class="bi bi-check-circle-fill"></i> Правильный
+                </button>
+                {% else %}
+                <button class="btn btn-outline-success btn-sm mark-correct-btn" 
+                        data-question-id="{{ question.id }}" 
+                        data-answer-id="{{ answer.id }}" 
+                        title="Отметить как правильный ответ">
+                    <i class="bi bi-check-circle"></i> Отметить
+                </button>
+                {% endif %}
+            </div>
+            {% elif answer.is_correct %}
+            <div class="correct-answer">
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Правильный ответ</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="answer-content flex-grow-1">
+            <div class="answer-text mb-2">
+                {{ answer.text }}
+            </div>
+            <div class="answer-meta">
+                <img src="{% user_avatar_url answer.author %}" alt="Avatar" class="user-avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+                Ответил <a href="{% url 'profile' answer.author.username %}">{{ answer.author_name }}</a> {{ answer.time_ago }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if user.is_authenticated %}
+<div class="answer-form mt-4">
+    <h4 class="mb-3">Ваш ответ</h4>
+    
+    {% if answer_form.non_field_errors %}
+    <div class="alert alert-danger" role="alert">
+        {% for error in answer_form.non_field_errors %}
+            {{ error }}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <form method="post" action="{% url 'question' question.id %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="{{ answer_form.text.id_for_label }}" class="form-label">{{ answer_form.text.label }}</label>
+            <textarea class="form-control {% if answer_form.text.errors %}is-invalid{% endif %}" 
+                      id="{{ answer_form.text.id_for_label }}" 
+                      name="{{ answer_form.text.name }}" 
+                      rows="6" 
+                      placeholder="Введите ваш ответ здесь..."
+                      autofocus>{{ answer_form.text.value|default:'' }}</textarea>
+            {% if answer_form.text.errors %}
+            <div class="invalid-feedback">
+                {% for error in answer_form.text.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить ответ</button>
+    </form>
+</div>
+{% else %}
+<div class="alert alert-info mt-4" role="alert">
+    <a href="{% url 'login' %}?continue={% url 'question' question.id %}">Войдите</a>, чтобы ответить на вопрос.
+</div>
+{% endif %}
+
+{% block extra_js %}
+<script>
+    // Скролл к якорю при загрузке страницы, если есть якорь в URL
+    if (window.location.hash) {
+        setTimeout(function() {
+            var target = document.querySelector(window.location.hash);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
+    }
+    
+    // Обработка лайков ответов
+    $(document).on('click', '.answer-like-btn, .answer-dislike-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var answerId = $btn.data('answer-id');
+        var type = $btn.data('type');
+        var $likeBtn = $('.answer-like-btn[data-answer-id="' + answerId + '"]');
+        var $dislikeBtn = $('.answer-dislike-btn[data-answer-id="' + answerId + '"]');
+        
+        $.ajax({
+            url: '/api/answer/' + answerId + '/like/',
+            method: 'POST',
+            data: {
+                type: type
+            },
+            success: function(response) {
+                $('.answer-likes-count-' + answerId).text(response.likes_cnt);
+                $('.answer-dislikes-count-' + answerId).text(response.dislikes_cnt);
+                
+                // Обновляем стили кнопок
+                if (type === 'like') {
+                    if ($likeBtn.hasClass('btn-outline-success')) {
+                        $likeBtn.removeClass('btn-outline-success').addClass('btn-success');
+                        $dislikeBtn.removeClass('btn-danger').addClass('btn-outline-danger');
+                    } else {
+                        $likeBtn.removeClass('btn-success').addClass('btn-outline-success');
+                    }
+                } else {
+                    if ($dislikeBtn.hasClass('btn-outline-danger')) {
+                        $dislikeBtn.removeClass('btn-outline-danger').addClass('btn-danger');
+                        $likeBtn.removeClass('btn-success').addClass('btn-outline-success');
+                    } else {
+                        $dislikeBtn.removeClass('btn-danger').addClass('btn-outline-danger');
+                    }
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 401) {
+                    alert('Необходимо войти в систему');
+                } else {
+                    alert('Произошла ошибка при обработке запроса');
+                }
+            }
+        });
+    });
+    
+    // Обработка отметки правильного ответа
+    $(document).on('click', '.mark-correct-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var questionId = $btn.data('question-id');
+        var answerId = $btn.data('answer-id');
+        
+        $.ajax({
+            url: '/api/question/' + questionId + '/answer/' + answerId + '/correct/',
+            method: 'POST',
+            success: function(response) {
+                if (response.is_correct) {
+                    $btn.removeClass('btn-outline-success').addClass('btn-success');
+                    $btn.html('<i class="bi bi-check-circle-fill"></i> Правильный');
+                    $btn.attr('title', 'Убрать отметку правильного ответа');
+                } else {
+                    $btn.removeClass('btn-success').addClass('btn-outline-success');
+                    $btn.html('<i class="bi bi-check-circle"></i> Отметить');
+                    $btn.attr('title', 'Отметить как правильный ответ');
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 401) {
+                    alert('Необходимо войти в систему');
+                } else if (xhr.status === 403) {
+                    alert('Только автор вопроса может отмечать правильный ответ');
+                } else {
+                    alert('Произошла ошибка при обработке запроса');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}
